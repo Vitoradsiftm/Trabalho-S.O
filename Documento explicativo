@@ -1,0 +1,323 @@
+# Trabalho-S.O
+Trabalho sobre SRT E ROUND ROBIN
+Inclusão de Bibliotecas
+c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+```
+- #include <stdio.h>: Inclui a biblioteca padrão de entrada e saída, necessária para usar funções como `printf` e `scanf`.
+- #include <stdlib.h>: Inclui a biblioteca padrão que fornece funções como `qsort` e `malloc`.
+- #include <string.h>: Inclui a biblioteca padrão de manipulação de strings, necessária para usar funções como `memmove` e `strcmp`.
+
+ Definição de Constantes
+c
+#define MAX_PROCESSOS 15
+#define MAX_NOME 20
+
+- #define MAX_PROCESSOS 15`: Define uma constante que representa o número máximo de processos que podem ser cadastrados.
+- #define MAX_NOME 20`: Define uma constante que representa o tamanho máximo do nome de um processo.
+
+Definição de Estrutura
+c
+typedef struct {
+    char id[MAX_NOME];
+    int tempo_execucao;
+    int tempo_chegada;
+} Processo;
+```
+- Define uma estrutura chamada `Processo` que contém:
+  - id[MAX_NOME]: Uma string que representa o nome do processo.
+  - tempo_execucao: Um inteiro que representa o tempo de execução do processo.
+  - tempo_chegada: Um inteiro que representa o tempo de chegada do processo.
+
+Função de Comparação
+c
+int compararProcessos(const void *a, const void *b) {
+    Processo *p1 = (Processo *)a;
+    Processo *p2 = (Processo *)b;
+    return p1->tempo_chegada - p2->tempo_chegada;
+}
+```
+- compararProcessos: Função usada pelo qsort para ordenar os processos pelo tempo de chegada.
+  - const void *a e const void *b: Ponteiros para os elementos a serem comparados.
+  - Processo *p1 = (Processo *)a: Converte o ponteiro `a` para um ponteiro do tipo `Processo`.
+  - Processo *p2 = (Processo *)b: Converte o ponteiro `b` para um ponteiro do tipo Processo.
+  - return p1->tempo_chegada - p2->tempo_chegada: Retorna a diferença entre os tempos de chegada dos dois processos, usada para ordenação crescente.
+
+Função para Imprimir Resultados
+c
+void imprimirResultados(int resultado[][2], int resultado_indice) {
+    printf("\nResultados dos tempos:\n\n");
+    printf("Tempo | Processo\n");
+    printf("------+---------\n");
+    for (int i = 0; i < resultado_indice; i++) {
+        printf("%5d |    %c\n", resultado[i][0], resultado[i][1]);
+    }
+    printf("\n");
+}
+```
+- imprimirResultados: Função que imprime os resultados dos tempos de execução dos processos.
+  - int resultado[][2]: Matriz que armazena os tempos e processos.
+  - int resultado_indice: Índice que indica quantos resultados foram armazenados na matriz.
+  - for (int i = 0; i < resultado_indice; i++): Loop que itera sobre os resultados.
+  - printf("%5d |    %c\n", resultado[i][0], resultado[i][1]);`: Imprime o tempo e o processo.
+
+ Função para Executar o Algoritmo SRT
+c
+void executarSRT() {
+    printf("SRT\n\n");
+
+    Processo processos[MAX_PROCESSOS];
+    int num_processos;
+    int i;
+
+    do {
+        printf("Quantos processos deseja cadastrar?\n");
+        scanf("%d", &num_processos);
+        if (num_processos > MAX_PROCESSOS) {
+            printf("O limite máximo é de %d processos.\n\n", MAX_PROCESSOS);
+        }
+    } while (num_processos > MAX_PROCESSOS || num_processos <= 0);
+
+    for (i = 0; i < num_processos; i++) {
+        printf("Digite o nome do processo, o tempo de execução e o tempo de chegada:\n");
+        scanf("%s %d %d", processos[i].id, &processos[i].tempo_execucao, &processos[i].tempo_chegada);
+    }
+
+    qsort(processos, num_processos, sizeof(Processo), compararProcessos);
+
+    Processo fila_prioridade[MAX_PROCESSOS];
+    int resultado[100][2];
+    int tempo_atual = 0;
+    int fila_tamanho = 0;
+    int resultado_indice = 0;
+    int continuar = 1;
+
+    while (continuar) {
+        for (i = 0; i < num_processos;) {
+            if (processos[i].tempo_chegada <= tempo_atual) {
+                fila_prioridade[fila_tamanho++] = processos[i];
+                memmove(&processos[i], &processos[i + 1], (num_processos - i - 1) * sizeof(Processo));
+                num_processos--;
+            } else {
+                i++;
+            }
+        }
+
+        if (fila_tamanho > 0) {
+            qsort(fila_prioridade, fila_tamanho, sizeof(Processo), compararProcessos);
+
+            resultado[resultado_indice][0] = tempo_atual;
+            resultado[resultado_indice][1] = fila_prioridade[0].id[0]; // Ajuste para exibir a primeira letra do nome
+            resultado_indice++;
+            tempo_atual++;
+
+            fila_prioridade[0].tempo_execucao--;
+
+            if (fila_prioridade[0].tempo_execucao > 0) {
+                Processo temp = fila_prioridade[0];
+                for (i = 1; i < fila_tamanho; i++) {
+                    fila_prioridade[i - 1] = fila_prioridade[i];
+                }
+                fila_prioridade[fila_tamanho - 1] = temp;
+            } else {
+                for (i = 1; i < fila_tamanho; i++) {
+                    fila_prioridade[i - 1] = fila_prioridade[i];
+                }
+                fila_tamanho--;
+            }
+        } else {
+            resultado[resultado_indice][0] = tempo_atual;
+            resultado[resultado_indice][1] = '*';
+            resultado_indice++;
+            tempo_atual++;
+        }
+
+        if (fila_tamanho == 0 && num_processos == 0) {
+            continuar = 0;
+        }
+    }
+
+    imprimirResultados(resultado, resultado_indice);
+}
+```
+- executarSRT: Função que executa o algoritmo de escalonamento de processos SRT (Shortest Remaining Time).
+  - Declaração de variáveis, entrada de dados e ordenação:
+    - `Processo processos[MAX_PROCESSOS]`: Declara um vetor para armazenar os processos.
+    - int num_processos: Variável para armazenar o número de processos.
+    - int i: Índice para loops.
+    - do { ... } while (num_processos > MAX_PROCESSOS || num_processos <= 0);: Loop para garantir que o número de processos está dentro dos limites permitidos.
+    - for (i = 0; i < num_processos; i++) { ... }: Loop para entrada dos dados dos processos.
+    - qsort(processos, num_processos, sizeof(Processo), compararProcessos);: Ordena os processos pelo tempo de chegada.
+  - Execução do algoritmo SRT:
+    - Processo fila_prioridade[MAX_PROCESSOS]`: Fila de prioridade para os processos.
+    - int resultado[100][2]: Matriz para armazenar os resultados.
+    - int tempo_atual = 0: Variável para controlar o tempo atual.
+    - int fila_tamanho = 0: Tamanho da fila de prioridade.
+    - int resultado_indice = 0: Índice para armazenar os resultados.
+    - int continuar = 1: Variável de controle para o loop principal.
+    - while (continuar) { ... }`: Loop principal do algoritmo.
+      - for (i = 0; i < num_processos;) { ... }: Adiciona processos à fila de prioridade quando o tempo de chegada é menor ou igual ao tempo atual.
+      - if (fila_tamanho > 0) { ... }`: Processa os elementos da fila de prioridade.
+      - if (fila_tamanho == 0 && num_processos == 0) { continuar = 0; }`: Finaliza o loop quando não há mais processos na fila e nenhum novo processo para chegar.
+  - imprimirResultados(resultado, resultado_indice);`: Chama a função para imprimir os resultados.
+
+Função para Executar o Algoritmo Round Robin
+c
+void executarRoundRobin() {
+    printf("Round Robin:\n");
+
+    Processo processos[MAX_PROCESSOS];
+    int num_processos;
+    int i;
+
+    do {
+        printf("Quantos processos deseja cadastrar?\n");
+        scanf("%d", &num_processos);
+        if (num_processos > MAX_PROCESSOS) {
+            printf("O limite é de %d processos.\n\n", MAX_PROCESSOS);
+        }
+    } while (num_processos > MAX_PROCESSOS || num_processos <= 0);
+
+    for (i = 0; i < num_processos; i++) {
+        printf("Digite o nome do processo, o tempo de execução e o tempo de chegada:\n");
+       
+
+ scanf("%s %d %d", processos[i].id, &processos[i].tempo_execucao, &processos[i].tempo_chegada);
+    }
+
+    qsort(processos, num_processos, sizeof(Processo), compararProcessos);
+
+    int quantum;
+    printf("Qual o valor do quantum?\n");
+    scanf("%d", &quantum);
+
+    Processo fila[MAX_PROCESSOS];
+    int resultado[100][2];
+    int tempo_atual = 0;
+    int fila_tamanho = 0;
+    int resultado_indice = 0;
+    int continuar = 1;
+
+    while (continuar) {
+        for (i = 0; i < num_processos;) {
+            if (processos[i].tempo_chegada <= tempo_atual) {
+                fila[fila_tamanho++] = processos[i];
+                memmove(&processos[i], &processos[i + 1], (num_processos - i - 1) * sizeof(Processo));
+                num_processos--;
+            } else {
+                i++;
+            }
+        }
+
+        if (fila_tamanho > 0) {
+            int tempo_quantum = quantum;
+
+            while (tempo_quantum-- && fila[0].tempo_execucao > 0) {
+                fila[0].tempo_execucao--;
+                resultado[resultado_indice][0] = tempo_atual;
+                resultado[resultado_indice][1] = fila[0].id[0]; // Ajuste para exibir a primeira letra do nome
+                resultado_indice++;
+                tempo_atual++;
+
+                for (i = 0; i < num_processos;) {
+                    if (processos[i].tempo_chegada <= tempo_atual) {
+                        fila[fila_tamanho++] = processos[i];
+                        memmove(&processos[i], &processos[i + 1], (num_processos - i - 1) * sizeof(Processo));
+                        num_processos--;
+                    } else {
+                        i++;
+                    }
+                }
+            }
+
+            if (fila[0].tempo_execucao > 0) {
+                Processo temp = fila[0];
+                for (i = 1; i < fila_tamanho; i++) {
+                    fila[i - 1] = fila[i];
+                }
+                fila[fila_tamanho - 1] = temp;
+            } else {
+                for (i = 1; i < fila_tamanho; i++) {
+                    fila[i - 1] = fila[i];
+                }
+                fila_tamanho--;
+            }
+        } else {
+            resultado[resultado_indice][0] = tempo_atual;
+            resultado[resultado_indice][1] = '*';
+            resultado_indice++;
+            tempo_atual++;
+        }
+
+        if (fila_tamanho == 0 && num_processos == 0) {
+            continuar = 0;
+        }
+    }
+
+    imprimirResultados(resultado, resultado_indice);
+}
+```
+- executarRoundRobin: Função que executa o algoritmo de escalonamento de processos Round Robin.
+  - Declaração de variáveis, entrada de dados e ordenação:
+    - Processo processos[MAX_PROCESSOS]: Declara um vetor para armazenar os processos.
+    - int num_processos: Variável para armazenar o número de processos.
+    - int i: Índice para loops.
+    - do { ... } while (num_processos > MAX_PROCESSOS || num_processos <= 0);`: Loop para garantir que o número de processos está dentro dos limites permitidos.
+    - for (i = 0; i < num_processos; i++) { ... }: Loop para entrada dos dados dos processos.
+    - qsort(processos, num_processos, sizeof(Processo), compararProcessos);: Ordena os processos pelo tempo de chegada.
+  - Execução do algoritmo Round Robin:
+    - int quantum: Variável para armazenar o valor do quantum.
+    - Processo fila[MAX_PROCESSOS]: Fila para armazenar os processos prontos para execução.
+    - int resultado[100][2]: Matriz para armazenar os resultados.
+    - int tempo_atual = 0: Variável para controlar o tempo atual.
+    - `int fila_tamanho = 0`: Tamanho da fila.
+    - `int resultado_indice = 0`: Índice para armazenar os resultados.
+    - `int continuar = 1`: Variável de controle para o loop principal.
+    - `while (continuar) { ... }`: Loop principal do algoritmo.
+      - `for (i = 0; i < num_processos;) { ... }`: Adiciona processos à fila quando o tempo de chegada é menor ou igual ao tempo atual.
+      - `if (fila_tamanho > 0) { ... }`: Processa os elementos da fila com base no quantum.
+      - `if (fila_tamanho == 0 && num_processos == 0) { continuar = 0; }`: Finaliza o loop quando não há mais processos na fila e nenhum novo processo para chegar.
+  - `imprimirResultados(resultado, resultado_indice);`: Chama a função para imprimir os resultados.
+
+### Função Principal
+```c
+int main() {
+    int opcao;
+
+    do {
+        printf("Menu Principal\n");
+        printf("Escolha um número:\n");
+        printf("1. Algoritmo SRT\n");
+        printf("2. Algoritmo Round Robin\n");
+        printf("3. Finalizar\n");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1:
+                executarSRT();
+                break;
+            case 2:
+                executarRoundRobin();
+                break;
+            case 3:
+                printf("Finalizado.\n");
+                break;
+            default:
+                printf("Escolha inválida. Tente novamente.\n");
+                break;
+        }
+    } while (opcao != 3);
+
+    return 0;
+}
+```
+- `int main()`: Função principal do programa.
+  - `int opcao`: Variável para armazenar a escolha do usuário no menu.
+  - `do { ... } while (opcao != 3);`: Loop que exibe o menu até que o usuário escolha a opção de finalizar.
+  - `switch (opcao) { ... }`: Estrutura de controle que executa a função correspondente à escolha do usuário:
+    - `case 1`: Chama a função `executarSRT`.
+    - `case 2`: Chama a função `executarRoundRobin`.
+    - `case 3`: Imprime "Finalizado" e sai do programa.
+    - `default`: Imprime uma mensagem de erro para escolhas inválidas.
