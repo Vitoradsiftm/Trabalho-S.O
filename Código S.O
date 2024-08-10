@@ -1,22 +1,29 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h> //#include <stdio.h>: Inclui a biblioteca padrão de entrada e saída, necessária para usar funções como `printf` e `scanf`.
+#include <stdlib.h>//#include <stdlib.h>: Inclui a biblioteca padrão que fornece funções como `qsort` e `malloc`.
+#include <string.h>//#include <string.h>: Inclui a biblioteca padrão de manipulação de strings, necessária para usar funções como `memmove` e `strcmp`.
 
-#define MAX_PROCESSOS 15
-#define MAX_NOME 20
+#define MAX_PROCESSOS 15 //#define MAX_PROCESSOS 15`: Define uma constante que representa o número máximo de processos que podem ser cadastrados.
+#define MAX_NOME 20 //#define MAX_NOME 20`: Define uma constante que representa o tamanho máximo do nome de um processo.
 
+  //- Define uma estrutura chamada `Processo` que contém: - id[MAX_NOME]: Uma string que representa o nome do processo. - 
+  //tempo_execucao: Um inteiro que representa o tempo de execução do processo. 
+  //- tempo_chegada: Um inteiro que representa o tempo de chegada do processo.
 typedef struct {
-    char id[MAX_NOME];
+    char id[MAX_NOME];  
     int tempo_execucao;
     int tempo_chegada;
 } Processo;
-
+//- tempo_chegada: Um inteiro que representa o tempo de chegada do processo.
 int compararProcessos(const void *a, const void *b) {
     Processo *p1 = (Processo *)a;
     Processo *p2 = (Processo *)b;
     return p1->tempo_chegada - p2->tempo_chegada;
 }
-
+//imprimirResultados: Função que imprime os resultados dos tempos de execução dos processos.
+//int resultado[][2]: Matriz que armazena os tempos e processos.
+//int resultado_indice: Índice que indica quantos resultados foram armazenados na matriz.
+//for (int i = 0; i < resultado_indice; i++): Loop que itera sobre os resultados.
+//printf("%5d |    %c\n", resultado[i][0], resultado[i][1]);`: Imprime o tempo e o processo.
 void imprimirResultados(int resultado[][2], int resultado_indice) {
     printf("\nResultados dos tempos:\n\n");
     printf("Tempo | Processo\n");
@@ -31,8 +38,8 @@ void executarSRT() {
     printf("SRT\n\n");
 
     Processo processos[MAX_PROCESSOS];
-    int num_processos;
-    int i;
+    int num_processos; //verificar quantidade de processos 
+    int i;// i para o loop
 
     do {
         printf("Quantos processos deseja cadastrar?\n");
@@ -40,24 +47,27 @@ void executarSRT() {
         if (num_processos > MAX_PROCESSOS) {
             printf("O limite máximo é de %d processos.\n\n", MAX_PROCESSOS);
         }
+  // Loop para garantir que o número de processos está dentro dos limites permitidos.
     } while (num_processos > MAX_PROCESSOS || num_processos <= 0);
 
-    for (i = 0; i < num_processos; i++) {
+    for (i = 0; i < num_processos; i++) { //Loop para entrada dos dados dos processos.
         printf("Digite o nome do processo, o tempo de execução e o tempo de chegada:\n");
         scanf("%s %d %d", processos[i].id, &processos[i].tempo_execucao, &processos[i].tempo_chegada);
     }
 
-    qsort(processos, num_processos, sizeof(Processo), compararProcessos);
+    qsort(processos, num_processos, sizeof(Processo), compararProcessos); //Ordena os processos pelo tempo de chegada.
 
-    Processo fila_prioridade[MAX_PROCESSOS];
-    int resultado[100][2];
-    int tempo_atual = 0;
-    int fila_tamanho = 0;
-    int resultado_indice = 0;
-    int continuar = 1;
+    Processo fila_prioridade[MAX_PROCESSOS]; //Prioridade dos processos na fila 
+    int resultado[100][2]; //Matriz para armazenar os resultados.
+    int tempo_atual = 0; //Variável para controlar o tempo atual.
+    int fila_tamanho = 0; //Tamanho da fila de prioridade.
+    int resultado_indice = 0; //ndice para armazenar os resultados.
+    int continuar = 1; //Variável de controle para o loop principal.
 
     while (continuar) {
+ //Adiciona processos à fila de prioridade quando o tempo de chegada é menor ou igual ao tempo atual.       
         for (i = 0; i < num_processos;) {
+//Processa os elementos da fila de prioridade.
             if (processos[i].tempo_chegada <= tempo_atual) {
                 fila_prioridade[fila_tamanho++] = processos[i];
                 memmove(&processos[i], &processos[i + 1], (num_processos - i - 1) * sizeof(Processo));
@@ -95,21 +105,21 @@ void executarSRT() {
             resultado_indice++;
             tempo_atual++;
         }
-
-        if (fila_tamanho == 0 && num_processos == 0) {
+//Finaliza o loop quando não há mais processos na fila e nenhum novo processo para chegar.
+        if (fila_tamanho == 0 && num_processos == 0) { 
             continuar = 0;
         }
     }
 
-    imprimirResultados(resultado, resultado_indice);
+    imprimirResultados(resultado, resultado_indice); // exibir resultados
 }
 
 void executarRoundRobin() {
     printf("Round Robin:\n");
 
-    Processo processos[MAX_PROCESSOS];
-    int num_processos;
-    int i;
+    Processo processos[MAX_PROCESSOS]; //Declara um vetor para armazenar os processos.
+    int num_processos; //Variável para armazenar o número de processos.
+    int i; //Índice para loops.
 
     do {
         printf("Quantos processos deseja cadastrar?\n");
@@ -117,27 +127,29 @@ void executarRoundRobin() {
         if (num_processos > MAX_PROCESSOS) {
             printf("O limite é de %d processos.\n\n", MAX_PROCESSOS);
         }
+ //Loop para garantir que o número de processos está dentro dos limites permitidos.
     } while (num_processos > MAX_PROCESSOS || num_processos <= 0);
-
+//Loop para entrada dos dados dos processos.
     for (i = 0; i < num_processos; i++) {
         printf("Digite o nome do processo, o tempo de execução e o tempo de chegada:\n");
         scanf("%s %d %d", processos[i].id, &processos[i].tempo_execucao, &processos[i].tempo_chegada);
     }
-
+//Ordena os processos pelo tempo de chegada.
     qsort(processos, num_processos, sizeof(Processo), compararProcessos);
 
-    int quantum;
+    int quantum; //variavel para inserir o quantum 
     printf("Qual o valor do quantum?\n");
     scanf("%d", &quantum);
 
-    Processo fila[MAX_PROCESSOS];
-    int resultado[100][2];
-    int tempo_atual = 0;
-    int fila_tamanho = 0;
-    int resultado_indice = 0;
-    int continuar = 1;
-
+    Processo fila[MAX_PROCESSOS]; //Fila para armazenar os processos prontos para execução.
+    int resultado[100][2]; //Matriz para armazenar os resultados.
+    int tempo_atual = 0; //Variável para controlar o tempo atual.
+    int fila_tamanho = 0; //Tamanho da fila.
+    int resultado_indice = 0;//Índice para armazenar os resultados.
+    int continuar = 1; //Variável de controle para o loop principal.
+// Loop principal do algoritmo.
     while (continuar) {
+//Adiciona processos à fila quando o tempo de chegada é menor ou igual ao tempo atual.       
         for (i = 0; i < num_processos;) {
             if (processos[i].tempo_chegada <= tempo_atual) {
                 fila[fila_tamanho++] = processos[i];
@@ -147,7 +159,7 @@ void executarRoundRobin() {
                 i++;
             }
         }
-
+// Processa os elementos da fila com base no quantum.
         if (fila_tamanho > 0) {
             int tempo_quantum = quantum;
 
@@ -187,12 +199,12 @@ void executarRoundRobin() {
             resultado_indice++;
             tempo_atual++;
         }
-
+//Finaliza o loop quando não há mais processos na fila e nenhum novo processo para chegar.
         if (fila_tamanho == 0 && num_processos == 0) {
             continuar = 0;
         }
     }
-
+//imprime os resultados
     imprimirResultados(resultado, resultado_indice);
 }
 
